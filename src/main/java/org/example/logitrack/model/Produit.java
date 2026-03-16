@@ -22,6 +22,6 @@ public class Produit {
     private double prix;
     private int quantite;
 
-    @OneToMany(mappedBy = "produits")
+    @OneToMany(mappedBy = "produit")
     private List<LigneCommande> ligneCommandes;
 }

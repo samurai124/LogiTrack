@@ -24,6 +24,6 @@ public class Commande {
     @ManyToOne
     private Client client;
 
-    @OneToMany(mappedBy = "commandes")
+    @OneToMany(mappedBy = "commande")
     private List<LigneCommande> ligneCommandes;
 }

@@ -49,4 +49,23 @@ public class CommandeController {
         return ResponseEntity.ok().build();
 
     }
+
+    @PostMapping("/{orderId}/product")
+    public ResponseEntity<String> addProduit(
+            @PathVariable long orderId,
+            @RequestParam long  produitId,
+            @RequestParam int quntite
+    ){
+        Produit produit = produitService.getProduitById(produitId);
+        Commande commande = commandeService.getCommandeById(orderId);
+        if (produit == null || commande == null || produit.getQuantite() < quntite){
+            return ResponseEntity
+                    .status(400)
+                    .body("Produit not available or invalid request");
+        }
+
+
+        return null;
+    }
+
 }

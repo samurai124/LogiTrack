@@ -24,7 +24,7 @@ public class ClientController {
 
     @GetMapping("/{id}")
     public Client getClientById(@RequestParam long id){
-        return clientService.getClinetById(id);
+        return clientService.getClientById(id);
     }
 
     @PostMapping
@@ -47,7 +47,7 @@ public class ClientController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteClient(@PathVariable Long id){
-        clientService.deletCLient(id);
+        clientService.deleteClient(id);
         return ResponseEntity.ok().build();
     }
 

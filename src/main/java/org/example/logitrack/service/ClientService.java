@@ -26,12 +26,12 @@ public class ClientService {
     }
 
     @Transactional
-    public  Client getClinetById(long id){
+    public  Client getClientById(long id){
         return clientRepository.findById(id).get();
     }
 
     @Transactional
-    public void deletCLient(long id){
+    public void deleteClient(long id){
         clientRepository.deleteById(id);
     }
 }

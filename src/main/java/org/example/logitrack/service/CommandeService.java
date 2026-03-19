@@ -1,12 +1,12 @@
 package org.example.logitrack.service;
 
 
+import org.example.logitrack.model.Client;
 import org.example.logitrack.model.Commande;
 import org.example.logitrack.model.LigneCommande;
 import org.example.logitrack.model.Produit;
 import org.example.logitrack.repository.CommandeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,8 +25,12 @@ public class CommandeService {
     @Autowired
     private LigneCommandeService ligneCommandeService;
 
+
+    @Autowired
+    private ClientService clientService;
+
     @Transactional
-    public List<Commande>  getAllcommandes(){
+    public List<Commande>  getAllCommandes(){
         return commandeRepository.findAll();
     }
 
@@ -44,7 +48,7 @@ public class CommandeService {
 
     @Transactional
     public Commande getCommandeById(long id){
-        return commandeRepository.findById(id).get();
+        return commandeRepository.findById(id).orElse(null);
     }
 
     @Transactional
@@ -52,7 +56,7 @@ public class CommandeService {
 
 
         Produit produit = produitService.getProduitById(produit_id);
-        Commande commande = commandeRepository.findById(commande_id).get();
+        Commande commande = commandeRepository.findById(commande_id).orElse(null);
         LigneCommande ligneCommande = new LigneCommande();
 
         if (produit == null || produit.getQuantite() < quantite || commande == null){
@@ -72,5 +76,10 @@ public class CommandeService {
         produitService.addProduit(produit);
 
         return true;
+    }
+
+    public List<Commande> getClientCommandes(long clientId){
+        Client client = clientService.getClientById(clientId);
+        return commandeRepository.findCommandeByClient(client);
     }
 }

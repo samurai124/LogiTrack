@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -25,5 +26,6 @@ public class Commande {
     private Client client;
 
     @OneToMany(mappedBy = "commande")
+    @JsonIgnore
     private List<LigneCommande> ligneCommandes;
 }

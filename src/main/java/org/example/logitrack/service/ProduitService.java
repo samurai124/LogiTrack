@@ -2,6 +2,7 @@ package org.example.logitrack.service;
 
 
 import jakarta.transaction.Transactional;
+import org.example.logitrack.model.Client;
 import org.example.logitrack.model.Produit;
 import org.example.logitrack.repository.ProduitRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +34,18 @@ public class ProduitService {
     public void deleteProduit(long id){
         produitRepository.deleteById(id);
     }
+
+
+    @Transactional
+    public List<Produit> produitsParCategorie(String categorie){
+        return produitRepository.findProduitByCategorie(categorie);
+    }
+
+    @Transactional
+    public List<Produit> produitsGraterthan(double prix){
+        return produitRepository.findProduitByPrixGreaterThan(prix);
+    }
+
 
 
 }

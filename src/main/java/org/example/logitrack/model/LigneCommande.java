@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @NoArgsConstructor
 @Getter
@@ -18,8 +19,10 @@ public class LigneCommande {
     private int quantite;
 
     @ManyToOne
+    @JsonIgnore
     private Commande commande;
 
     @ManyToOne
+    @JsonIgnore
     private Produit produit;
 }

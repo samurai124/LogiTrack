@@ -46,4 +46,19 @@ public class ProduitController {
         produitService.deleteProduit(id);
         return ResponseEntity.ok().build();
     }
+
+    @GetMapping("category/{category}")
+    public List<Produit> produitsParCategorie(
+            @PathVariable String category
+    ){
+        return produitService.produitsParCategorie(category);
+    }
+
+    @GetMapping("price/{price}")
+    public List<Produit> produitsByPrix(
+            @PathVariable double prix
+    ){
+        return produitService.produitsGraterthan(prix);
+    }
+
 }

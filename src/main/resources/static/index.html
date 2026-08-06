@@ -1,0 +1,1160 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LogiTrack - Gestion des Stocks & Commandes Paginées</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --bg-card-hover: #334155;
+            --accent-blue: #3b82f6;
+            --accent-blue-hover: #2563eb;
+            --accent-indigo: #6366f1;
+            --accent-emerald: #10b981;
+            --accent-amber: #f59e0b;
+            --accent-rose: #f43f5e;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: #334155;
+            --shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+            --radius: 12px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .navbar {
+            max-width: 1300px;
+            margin: 0 auto;
+            padding: 1rem 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.35rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .brand-icon {
+            width: 38px;
+            height: 38px;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-indigo));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1.1rem;
+            -webkit-text-fill-color: initial;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 0.5rem;
+            background: rgba(15, 23, 42, 0.6);
+            padding: 0.25rem;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding: 0.6rem 1.2rem;
+            font-weight: 500;
+            font-size: 0.9rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .tab-btn.active {
+            background: var(--accent-blue);
+            color: white;
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+        }
+
+        .tab-btn:hover:not(.active) {
+            color: var(--text-main);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .auth-widget {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .user-badge {
+            font-size: 0.85rem;
+            padding: 0.35rem 0.75rem;
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--accent-emerald);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 20px;
+            font-weight: 500;
+        }
+
+        .btn {
+            background: var(--accent-blue);
+            color: white;
+            border: none;
+            padding: 0.55rem 1.1rem;
+            border-radius: 8px;
+            font-weight: 500;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .btn:hover {
+            background: var(--accent-blue-hover);
+            transform: translateY(-1px);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+        }
+
+        .btn-outline:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: var(--text-muted);
+        }
+
+        .btn-warning {
+            background: var(--accent-amber);
+            color: #0f172a;
+        }
+
+        .btn-warning:hover {
+            background: #d97706;
+        }
+
+        main {
+            max-width: 1300px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+            flex: 1;
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Filter Box */
+        .filter-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .filter-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .filter-title {
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .filter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            align-items: end;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        .form-group label {
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .form-control {
+            background: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 0.55rem 0.85rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .form-control:focus {
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+
+        /* Data Table */
+        .table-container {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: var(--shadow-lg);
+            margin-bottom: 1.5rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.9rem;
+        }
+
+        th {
+            background: rgba(15, 23, 42, 0.6);
+            color: var(--text-muted);
+            font-weight: 600;
+            padding: 0.9rem 1.25rem;
+            border-bottom: 1px solid var(--border-color);
+            user-select: none;
+            white-space: nowrap;
+        }
+
+        th.sortable {
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        th.sortable:hover {
+            color: var(--accent-blue);
+            background: rgba(59, 130, 246, 0.08);
+        }
+
+        th .sort-icon {
+            display: inline-block;
+            margin-left: 0.4rem;
+            opacity: 0.4;
+            transition: opacity 0.2s;
+        }
+
+        th.sorted .sort-icon {
+            opacity: 1;
+            color: var(--accent-blue);
+        }
+
+        td {
+            padding: 0.9rem 1.25rem;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-main);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        /* Pagination Toolbar */
+        .pagination-toolbar {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 0.85rem 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1rem;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .pagination-info {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .pagination-info strong {
+            color: var(--text-main);
+        }
+
+        .size-selector {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .size-selector select {
+            background: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 0.35rem 0.6rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .pagination-controls {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+
+        .page-btn {
+            background: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            min-width: 34px;
+            height: 34px;
+            padding: 0 0.5rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .page-btn:hover:not(:disabled):not(.active) {
+            background: var(--bg-card-hover);
+            border-color: var(--text-muted);
+        }
+
+        .page-btn.active {
+            background: var(--accent-blue);
+            border-color: var(--accent-blue);
+            color: white;
+            font-weight: 600;
+            box-shadow: 0 2px 6px rgba(59, 130, 246, 0.4);
+        }
+
+        .page-btn:disabled {
+            opacity: 0.35;
+            cursor: not-allowed;
+        }
+
+        /* Badges */
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.6rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .badge-success { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+        .badge-warning { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+        .badge-danger { background: rgba(244, 63, 94, 0.15); color: #f87171; border: 1px solid rgba(244, 63, 94, 0.3); }
+        .badge-info { background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            width: 100%;
+            max-width: 420px;
+            padding: 2rem;
+            box-shadow: 0 20px 30px rgba(0,0,0,0.5);
+            transform: scale(0.95);
+            transition: transform 0.3s ease;
+        }
+
+        .modal-overlay.open .modal-box {
+            transform: scale(1);
+        }
+
+        .modal-header {
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .modal-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+        }
+
+        .modal-subtitle {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 0.3rem;
+        }
+
+        .empty-state {
+            padding: 3rem;
+            text-align: center;
+            color: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="navbar">
+            <div class="brand">
+                <div class="brand-icon">LT</div>
+                <span>LogiTrack</span>
+            </div>
+
+            <nav class="nav-tabs">
+                <button class="tab-btn active" onclick="switchTab('clients')">
+                    👥 Clients
+                </button>
+                <button class="tab-btn" onclick="switchTab('produits')">
+                    📦 Produits
+                </button>
+                <button class="tab-btn" onclick="switchTab('commandes')">
+                    🛒 Commandes
+                </button>
+            </nav>
+
+            <div class="auth-widget">
+                <span id="userStatus" class="user-badge" style="display:none;">👤 Connecté</span>
+                <button id="loginBtn" class="btn btn-outline" onclick="openLoginModal()">Connexion</button>
+                <button id="logoutBtn" class="btn btn-outline" onclick="logout()" style="display:none;">Déconnexion</button>
+            </div>
+        </div>
+    </header>
+
+    <main>
+
+        <!-- CLIENTS TAB -->
+        <section id="tab-clients" class="tab-content active">
+            <div class="filter-card">
+                <div class="filter-card-header">
+                    <div class="filter-title">🔍 Recherche & Filtrage - Clients</div>
+                </div>
+                <div class="filter-grid">
+                    <div class="form-group">
+                        <label>Rechercher par nom client</label>
+                        <input type="text" id="clientSearchNom" class="form-control" placeholder="Ex: Alice, Dupont..." oninput="debounceFetch('clients')">
+                    </div>
+                    <div class="form-group" style="flex-direction:row; gap:0.5rem;">
+                        <button class="btn" onclick="fetchClients(0)">Rechercher</button>
+                        <button class="btn btn-outline" onclick="resetClientFilters()">Réinitialiser</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th class="sortable" onclick="handleSort('clients', 'id')">ID <span class="sort-icon" id="sort-clients-id">↕</span></th>
+                            <th class="sortable" onclick="handleSort('clients', 'nom')">Nom du Client <span class="sort-icon" id="sort-clients-nom">↕</span></th>
+                            <th>Email</th>
+                            <th>Téléphone</th>
+                            <th>Ville</th>
+                        </tr>
+                    </thead>
+                    <tbody id="clientsTableBody">
+                        <tr><td colspan="5" class="empty-state">Chargement des données...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="pagination-toolbar">
+                <div class="pagination-info" id="clientsPagInfo">
+                    <span>Affichage de <strong>0</strong> à <strong>0</strong> sur <strong>0</strong> clients au total</span>
+                    <div class="size-selector">
+                        <span>Éléments par page:</span>
+                        <select id="clientsPageSize" onchange="changePageSize('clients', this.value)">
+                            <option value="5">5</option>
+                            <option value="10" selected>10</option>
+                            <option value="20">20</option>
+                            <option value="50">50</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="pagination-controls" id="clientsPagControls"></div>
+            </div>
+        </section>
+
+        <!-- PRODUITS TAB -->
+        <section id="tab-produits" class="tab-content">
+            <div class="filter-card">
+                <div class="filter-card-header">
+                    <div class="filter-title">🔍 Recherche & Filtrage - Produits</div>
+                    <div>
+                        <button id="btnStockFaible" class="btn btn-warning" onclick="toggleStockFaible()">
+                            ⚠️ Stock Faible (≤ 10)
+                        </button>
+                    </div>
+                </div>
+                <div class="filter-grid">
+                    <div class="form-group">
+                        <label>Nom du Produit</label>
+                        <input type="text" id="produitSearchNom" class="form-control" placeholder="Ex: Laptop, Souris..." oninput="debounceFetch('produits')">
+                    </div>
+                    <div class="form-group">
+                        <label>Catégorie</label>
+                        <input type="text" id="produitSearchCat" class="form-control" placeholder="Ex: Électronique, Accessoires..." oninput="debounceFetch('produits')">
+                    </div>
+                    <div class="form-group">
+                        <label>Prix Min (€)</label>
+                        <input type="number" id="produitMinPrix" class="form-control" placeholder="0" oninput="debounceFetch('produits')">
+                    </div>
+                    <div class="form-group">
+                        <label>Prix Max (€)</label>
+                        <input type="number" id="produitMaxPrix" class="form-control" placeholder="1000" oninput="debounceFetch('produits')">
+                    </div>
+                    <div class="form-group" style="flex-direction:row; gap:0.5rem;">
+                        <button class="btn" onclick="fetchProduits(0)">Filtrer</button>
+                        <button class="btn btn-outline" onclick="resetProduitFilters()">Réinitialiser</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th class="sortable" onclick="handleSort('produits', 'id')">ID <span class="sort-icon" id="sort-produits-id">↕</span></th>
+                            <th class="sortable" onclick="handleSort('produits', 'nom')">Nom du Produit <span class="sort-icon" id="sort-produits-nom">↕</span></th>
+                            <th class="sortable" onclick="handleSort('produits', 'categorie')">Catégorie <span class="sort-icon" id="sort-produits-categorie">↕</span></th>
+                            <th class="sortable" onclick="handleSort('produits', 'prix')">Prix (€) <span class="sort-icon" id="sort-produits-prix">↕</span></th>
+                            <th class="sortable" onclick="handleSort('produits', 'quantite')">Quantité en Stock <span class="sort-icon" id="sort-produits-quantite">↕</span></th>
+                            <th>Statut Stock</th>
+                        </tr>
+                    </thead>
+                    <tbody id="produitsTableBody">
+                        <tr><td colspan="6" class="empty-state">Chargement des données...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="pagination-toolbar">
+                <div class="pagination-info" id="produitsPagInfo">
+                    <span>Affichage de <strong>0</strong> à <strong>0</strong> sur <strong>0</strong> produits au total</span>
+                    <div class="size-selector">
+                        <span>Éléments par page:</span>
+                        <select id="produitsPageSize" onchange="changePageSize('produits', this.value)">
+                            <option value="5">5</option>
+                            <option value="10" selected>10</option>
+                            <option value="20">20</option>
+                            <option value="50">50</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="pagination-controls" id="produitsPagControls"></div>
+            </div>
+        </section>
+
+        <!-- COMMANDES TAB -->
+        <section id="tab-commandes" class="tab-content">
+            <div class="filter-card">
+                <div class="filter-card-header">
+                    <div class="filter-title">🔍 Recherche & Filtrage - Commandes</div>
+                </div>
+                <div class="filter-grid">
+                    <div class="form-group">
+                        <label>Rechercher client (Nom)</label>
+                        <input type="text" id="commandeSearchClient" class="form-control" placeholder="Nom du client..." oninput="debounceFetch('commandes')">
+                    </div>
+                    <div class="form-group">
+                        <label>Filtrer par Statut</label>
+                        <select id="commandeStatusFilter" class="form-control" onchange="fetchCommandes(0)">
+                            <option value="ALL">Tous les statuts</option>
+                            <option value="EN_ATTENTE">En attente</option>
+                            <option value="EN_COURS">En cours</option>
+                            <option value="LIVREE">Livrée</option>
+                            <option value="ANNULEE">Annulée</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="flex-direction:row; gap:0.5rem;">
+                        <button class="btn" onclick="fetchCommandes(0)">Filtrer</button>
+                        <button class="btn btn-outline" onclick="resetCommandeFilters()">Réinitialiser</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th class="sortable" onclick="handleSort('commandes', 'id')">N° Commande <span class="sort-icon" id="sort-commandes-id">↕</span></th>
+                            <th class="sortable" onclick="handleSort('commandes', 'client.nom')">Nom du Client <span class="sort-icon" id="sort-commandes-client.nom">↕</span></th>
+                            <th class="sortable" onclick="handleSort('commandes', 'dateCommande')">Date de Commande <span class="sort-icon" id="sort-commandes-dateCommande">↕</span></th>
+                            <th class="sortable" onclick="handleSort('commandes', 'status')">Statut <span class="sort-icon" id="sort-commandes-status">↕</span></th>
+                        </tr>
+                    </thead>
+                    <tbody id="commandesTableBody">
+                        <tr><td colspan="4" class="empty-state">Chargement des données...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="pagination-toolbar">
+                <div class="pagination-info" id="commandesPagInfo">
+                    <span>Affichage de <strong>0</strong> à <strong>0</strong> sur <strong>0</strong> commandes au total</span>
+                    <div class="size-selector">
+                        <span>Éléments par page:</span>
+                        <select id="commandesPageSize" onchange="changePageSize('commandes', this.value)">
+                            <option value="5">5</option>
+                            <option value="10" selected>10</option>
+                            <option value="20">20</option>
+                            <option value="50">50</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="pagination-controls" id="commandesPagControls"></div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- LOGIN MODAL -->
+    <div id="loginModal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3 class="modal-title">Connexion LogiTrack</h3>
+                <p class="modal-subtitle">Entrez vos identifiants pour consommer l'API sécurisée</p>
+            </div>
+            <form onsubmit="handleLogin(event)">
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label>Email</label>
+                    <input type="email" id="loginEmail" class="form-control" value="admin@logitrack.com" required>
+                </div>
+                <div class="form-group" style="margin-bottom: 1.5rem;">
+                    <label>Mot de passe</label>
+                    <input type="password" id="loginPassword" class="form-control" value="admin123" required>
+                </div>
+                <div style="display:flex; justify-content:flex-end; gap:0.5rem;">
+                    <button type="button" class="btn btn-outline" onclick="closeLoginModal()">Annuler</button>
+                    <button type="submit" class="btn">Se connecter</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '/api';
+
+        // State for Clients
+        const state = {
+            clients: { page: 0, size: 10, sortBy: 'nom', sortDir: 'ASC', data: null },
+            produits: { page: 0, size: 10, sortBy: 'nom', sortDir: 'ASC', stockFaible: false, data: null },
+            commandes: { page: 0, size: 10, sortBy: 'dateCommande', sortDir: 'DESC', data: null }
+        };
+
+        let debounceTimers = {};
+
+        function getAuthHeader() {
+            const token = localStorage.getItem('jwt_token');
+            return token ? { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' } : { 'Content-Type': 'application/json' };
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAuth();
+            fetchClients(0);
+            fetchProduits(0);
+            fetchCommandes(0);
+        });
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+            event.currentTarget.classList.add('active');
+            document.getElementById('tab-' + tabName).classList.add('active');
+        }
+
+        function debounceFetch(entity) {
+            clearTimeout(debounceTimers[entity]);
+            debounceTimers[entity] = setTimeout(() => {
+                if (entity === 'clients') fetchClients(0);
+                if (entity === 'produits') fetchProduits(0);
+                if (entity === 'commandes') fetchCommandes(0);
+            }, 300);
+        }
+
+        // --- FETCH CLIENTS ---
+        async function fetchClients(page = 0) {
+            state.clients.page = page;
+            const size = state.clients.size;
+            const sortBy = state.clients.sortBy;
+            const sortDir = state.clients.sortDir;
+            const nom = document.getElementById('clientSearchNom').value;
+
+            const url = new URL(`${API_BASE}/client/page`, window.location.origin);
+            url.searchParams.append('page', page);
+            url.searchParams.append('size', size);
+            url.searchParams.append('sortBy', sortBy);
+            url.searchParams.append('sortDir', sortDir);
+            if (nom) url.searchParams.append('nom', nom);
+
+            try {
+                const res = await fetch(url, { headers: getAuthHeader() });
+                if (res.status === 401 || res.status === 403) {
+                    renderEmptyTable('clientsTableBody', 5, '🔐 Authentification requise. Veuillez vous connecter.');
+                    return;
+                }
+                const data = await res.json();
+                state.clients.data = data;
+                renderClients(data);
+                renderPagination('clients', data);
+            } catch (err) {
+                console.error(err);
+                renderEmptyTable('clientsTableBody', 5, 'Erreur lors du chargement des clients.');
+            }
+        }
+
+        function renderClients(data) {
+            const tbody = document.getElementById('clientsTableBody');
+            if (!data.content || data.content.length === 0) {
+                renderEmptyTable('clientsTableBody', 5, 'Aucun client trouvé.');
+                return;
+            }
+
+            tbody.innerHTML = data.content.map(c => `
+                <tr>
+                    <td><strong>#${c.id}</strong></td>
+                    <td>${escapeHtml(c.nom)}</td>
+                    <td>${escapeHtml(c.email || '-')}</td>
+                    <td>${escapeHtml(c.telephone || '-')}</td>
+                    <td>${escapeHtml(c.ville || '-')}</td>
+                </tr>
+            `).join('');
+        }
+
+        function resetClientFilters() {
+            document.getElementById('clientSearchNom').value = '';
+            state.clients.sortBy = 'nom';
+            state.clients.sortDir = 'ASC';
+            updateSortIcons('clients');
+            fetchClients(0);
+        }
+
+        // --- FETCH PRODUITS ---
+        async function fetchProduits(page = 0) {
+            state.produits.page = page;
+            const size = state.produits.size;
+            const sortBy = state.produits.sortBy;
+            const sortDir = state.produits.sortDir;
+            const nom = document.getElementById('produitSearchNom').value;
+            const cat = document.getElementById('produitSearchCat').value;
+            const minPrix = document.getElementById('produitMinPrix').value;
+            const maxPrix = document.getElementById('produitMaxPrix').value;
+            const stockFaible = state.produits.stockFaible;
+
+            const url = new URL(`${API_BASE}/produit/page`, window.location.origin);
+            url.searchParams.append('page', page);
+            url.searchParams.append('size', size);
+            url.searchParams.append('sortBy', sortBy);
+            url.searchParams.append('sortDir', sortDir);
+            if (nom) url.searchParams.append('nom', nom);
+            if (cat) url.searchParams.append('categorie', cat);
+            if (minPrix) url.searchParams.append('minPrix', minPrix);
+            if (maxPrix) url.searchParams.append('maxPrix', maxPrix);
+            if (stockFaible) url.searchParams.append('stockFaible', 'true');
+
+            try {
+                const res = await fetch(url, { headers: getAuthHeader() });
+                if (res.status === 401 || res.status === 403) {
+                    renderEmptyTable('produitsTableBody', 6, '🔐 Authentification requise. Veuillez vous connecter.');
+                    return;
+                }
+                const data = await res.json();
+                state.produits.data = data;
+                renderProduits(data);
+                renderPagination('produits', data);
+            } catch (err) {
+                console.error(err);
+                renderEmptyTable('produitsTableBody', 6, 'Erreur lors du chargement des produits.');
+            }
+        }
+
+        function renderProduits(data) {
+            const tbody = document.getElementById('produitsTableBody');
+            if (!data.content || data.content.length === 0) {
+                renderEmptyTable('produitsTableBody', 6, 'Aucun produit trouvé.');
+                return;
+            }
+
+            tbody.innerHTML = data.content.map(p => {
+                let badgeHtml = '<span class="badge badge-success">En Stock</span>';
+                if (p.quantite <= 0) {
+                    badgeHtml = '<span class="badge badge-danger">Épuisé</span>';
+                } else if (p.quantite <= 10) {
+                    badgeHtml = '<span class="badge badge-warning">Stock Faible</span>';
+                }
+
+                return `
+                    <tr>
+                        <td><strong>#${p.id}</strong></td>
+                        <td>${escapeHtml(p.nom)}</td>
+                        <td><span class="badge badge-info">${escapeHtml(p.categorie)}</span></td>
+                        <td><strong>${p.prix.toFixed(2)} €</strong></td>
+                        <td>${p.quantite} un.</td>
+                        <td>${badgeHtml}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function toggleStockFaible() {
+            state.produits.stockFaible = !state.produits.stockFaible;
+            const btn = document.getElementById('btnStockFaible');
+            if (state.produits.stockFaible) {
+                btn.style.boxShadow = '0 0 0 3px rgba(245, 158, 11, 0.5)';
+                btn.innerHTML = '⚠️ Stock Faible (ACTIF)';
+            } else {
+                btn.style.boxShadow = 'none';
+                btn.innerHTML = '⚠️ Stock Faible (≤ 10)';
+            }
+            fetchProduits(0);
+        }
+
+        function resetProduitFilters() {
+            document.getElementById('produitSearchNom').value = '';
+            document.getElementById('produitSearchCat').value = '';
+            document.getElementById('produitMinPrix').value = '';
+            document.getElementById('produitMaxPrix').value = '';
+            state.produits.stockFaible = false;
+            const btn = document.getElementById('btnStockFaible');
+            btn.style.boxShadow = 'none';
+            btn.innerHTML = '⚠️ Stock Faible (≤ 10)';
+            state.produits.sortBy = 'nom';
+            state.produits.sortDir = 'ASC';
+            updateSortIcons('produits');
+            fetchProduits(0);
+        }
+
+        // --- FETCH COMMANDES ---
+        async function fetchCommandes(page = 0) {
+            state.commandes.page = page;
+            const size = state.commandes.size;
+            const sortBy = state.commandes.sortBy;
+            const sortDir = state.commandes.sortDir;
+            const clientNom = document.getElementById('commandeSearchClient').value;
+            const status = document.getElementById('commandeStatusFilter').value;
+
+            const url = new URL(`${API_BASE}/commande/page`, window.location.origin);
+            url.searchParams.append('page', page);
+            url.searchParams.append('size', size);
+            url.searchParams.append('sortBy', sortBy);
+            url.searchParams.append('sortDir', sortDir);
+            if (clientNom) url.searchParams.append('clientNom', clientNom);
+            if (status && status !== 'ALL') url.searchParams.append('status', status);
+
+            try {
+                const res = await fetch(url, { headers: getAuthHeader() });
+                if (res.status === 401 || res.status === 403) {
+                    renderEmptyTable('commandesTableBody', 4, '🔐 Authentification requise. Veuillez vous connecter.');
+                    return;
+                }
+                const data = await res.json();
+                state.commandes.data = data;
+                renderCommandes(data);
+                renderPagination('commandes', data);
+            } catch (err) {
+                console.error(err);
+                renderEmptyTable('commandesTableBody', 4, 'Erreur lors du chargement des commandes.');
+            }
+        }
+
+        function renderCommandes(data) {
+            const tbody = document.getElementById('commandesTableBody');
+            if (!data.content || data.content.length === 0) {
+                renderEmptyTable('commandesTableBody', 4, 'Aucune commande trouvée.');
+                return;
+            }
+
+            tbody.innerHTML = data.content.map(c => {
+                let badgeClass = 'badge-info';
+                if (c.status === 'LIVREE') badgeClass = 'badge-success';
+                if (c.status === 'EN_ATTENTE') badgeClass = 'badge-warning';
+                if (c.status === 'ANNULEE') badgeClass = 'badge-danger';
+
+                const clientName = c.client ? escapeHtml(c.client.nom) : 'Inconnu';
+                const formattedDate = c.dateCommande ? new Date(c.dateCommande).toLocaleString('fr-FR') : '-';
+
+                return `
+                    <tr>
+                        <td><strong>CMD-#${c.id}</strong></td>
+                        <td>${clientName}</td>
+                        <td>${formattedDate}</td>
+                        <td><span class="badge ${badgeClass}">${escapeHtml(c.status || 'N/A')}</span></td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function resetCommandeFilters() {
+            document.getElementById('commandeSearchClient').value = '';
+            document.getElementById('commandeStatusFilter').value = 'ALL';
+            state.commandes.sortBy = 'dateCommande';
+            state.commandes.sortDir = 'DESC';
+            updateSortIcons('commandes');
+            fetchCommandes(0);
+        }
+
+        // --- SORTING HANDLER ---
+        function handleSort(entity, field) {
+            const entityState = state[entity];
+            if (entityState.sortBy === field) {
+                entityState.sortDir = entityState.sortDir === 'ASC' ? 'DESC' : 'ASC';
+            } else {
+                entityState.sortBy = field;
+                entityState.sortDir = 'ASC';
+            }
+            updateSortIcons(entity);
+
+            if (entity === 'clients') fetchClients(0);
+            if (entity === 'produits') fetchProduits(0);
+            if (entity === 'commandes') fetchCommandes(0);
+        }
+
+        function updateSortIcons(entity) {
+            const entityState = state[entity];
+            document.querySelectorAll(`[id^="sort-${entity}-"]`).forEach(el => {
+                el.innerText = '↕';
+                el.parentElement.classList.remove('sorted');
+            });
+            const currentSortEl = document.getElementById(`sort-${entity}-${entityState.sortBy}`);
+            if (currentSortEl) {
+                currentSortEl.innerText = entityState.sortDir === 'ASC' ? '▲' : '▼';
+                currentSortEl.parentElement.classList.add('sorted');
+            }
+        }
+
+        // --- PAGINATION RENDERING & CONTROLS ---
+        function changePageSize(entity, size) {
+            state[entity].size = parseInt(size, 10);
+            if (entity === 'clients') fetchClients(0);
+            if (entity === 'produits') fetchProduits(0);
+            if (entity === 'commandes') fetchCommandes(0);
+        }
+
+        function renderPagination(entity, data) {
+            const infoEl = document.getElementById(`${entity}PagInfo`);
+            const controlsEl = document.getElementById(`${entity}PagControls`);
+
+            const totalElements = data.totalElements || 0;
+            const totalPages = data.totalPages || 0;
+            const pageNumber = data.number || 0;
+            const size = data.size || state[entity].size;
+
+            const startIdx = totalElements === 0 ? 0 : (pageNumber * size) + 1;
+            const endIdx = Math.min((pageNumber + 1) * size, totalElements);
+
+            const entityLabel = entity === 'clients' ? 'clients' : (entity === 'produits' ? 'produits' : 'commandes');
+
+            infoEl.querySelector('span').innerHTML = `Affichage de <strong>${startIdx}</strong> à <strong>${endIdx}</strong> sur <strong>${totalElements}</strong> ${entityLabel} au total (Page ${pageNumber + 1} / ${totalPages || 1})`;
+
+            // Controls
+            let html = '';
+
+            // First & Prev
+            html += `<button class="page-btn" ${pageNumber === 0 ? 'disabled' : ''} onclick="goToPage('${entity}', 0)" title="Première page">⏮</button>`;
+            html += `<button class="page-btn" ${pageNumber === 0 ? 'disabled' : ''} onclick="goToPage('${entity}', ${pageNumber - 1})" title="Page précédente">◀</button>`;
+
+            // Page numbers
+            const maxVisible = 5;
+            let startPage = Math.max(0, pageNumber - Math.floor(maxVisible / 2));
+            let endPage = Math.min(totalPages, startPage + maxVisible);
+
+            if (endPage - startPage < maxVisible) {
+                startPage = Math.max(0, endPage - maxVisible);
+            }
+
+            for (let i = startPage; i < endPage; i++) {
+                html += `<button class="page-btn ${i === pageNumber ? 'active' : ''}" onclick="goToPage('${entity}', ${i})">${i + 1}</button>`;
+            }
+
+            // Next & Last
+            const isLast = pageNumber >= totalPages - 1 || totalPages === 0;
+            html += `<button class="page-btn" ${isLast ? 'disabled' : ''} onclick="goToPage('${entity}', ${pageNumber + 1})" title="Page suivante">▶</button>`;
+            html += `<button class="page-btn" ${isLast ? 'disabled' : ''} onclick="goToPage('${entity}', ${totalPages - 1})" title="Dernière page">⏭</button>`;
+
+            controlsEl.innerHTML = html;
+        }
+
+        function goToPage(entity, page) {
+            if (entity === 'clients') fetchClients(page);
+            if (entity === 'produits') fetchProduits(page);
+            if (entity === 'commandes') fetchCommandes(page);
+        }
+
+        // --- AUTH LOGIC ---
+        function checkAuth() {
+            const token = localStorage.getItem('jwt_token');
+            const userStatus = document.getElementById('userStatus');
+            const loginBtn = document.getElementById('loginBtn');
+            const logoutBtn = document.getElementById('logoutBtn');
+
+            if (token) {
+                userStatus.style.display = 'inline-block';
+                loginBtn.style.display = 'none';
+                logoutBtn.style.display = 'inline-flex';
+            } else {
+                userStatus.style.display = 'none';
+                loginBtn.style.display = 'inline-flex';
+                logoutBtn.style.display = 'none';
+            }
+        }
+
+        function openLoginModal() {
+            document.getElementById('loginModal').classList.add('open');
+        }
+
+        function closeLoginModal() {
+            document.getElementById('loginModal').classList.remove('open');
+        }
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+
+            try {
+                const res = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    localStorage.setItem('jwt_token', data.token || data.jwt || data.accessToken || data);
+                    closeLoginModal();
+                    checkAuth();
+                    fetchClients(0);
+                    fetchProduits(0);
+                    fetchCommandes(0);
+                } else {
+                    alert('Identifiants incorrects. Veuillez réessayer.');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Erreur lors de la tentative de connexion.');
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('jwt_token');
+            checkAuth();
+            fetchClients(0);
+            fetchProduits(0);
+            fetchCommandes(0);
+        }
+
+        // --- HELPERS ---
+        function renderEmptyTable(containerId, colSpan, message) {
+            document.getElementById(containerId).innerHTML = `
+                <tr><td colspan="${colSpan}" class="empty-state">${message}</td></tr>
+            `;
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+    </script>
+</body>
+</html>

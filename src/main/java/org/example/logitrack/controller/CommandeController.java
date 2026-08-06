@@ -1,12 +1,14 @@
 package org.example.logitrack.controller;
 
 
+import org.example.logitrack.dto.Commande_line_DTO;
 import org.example.logitrack.model.Client;
 import org.example.logitrack.model.Commande;
 import org.example.logitrack.model.Produit;
 import org.example.logitrack.service.ClientService;
 import org.example.logitrack.service.CommandeService;
 import org.example.logitrack.service.ProduitService;
+import org.springframework.data.domain.Page;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -30,8 +32,21 @@ public class CommandeController {
         return commandeService.getAllCommandes();
     }
 
+    @GetMapping("/page")
+    public ResponseEntity<Page<Commande>> getCommandesPaginated(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "dateCommande") String sortBy,
+            @RequestParam(defaultValue = "DESC") String sortDir,
+            @RequestParam(required = false) Long clientId,
+            @RequestParam(required = false) String clientNom,
+            @RequestParam(required = false) String status
+    ){
+        return ResponseEntity.ok(commandeService.searchCommandes(page, size, sortBy, sortDir, clientId, clientNom, status));
+    }
+
     @GetMapping("/{id}")
-    public Commande getCommandeById(long id){
+    public Commande getCommandeById(@PathVariable long id){
         return commandeService.getCommandeById(id);
     }
 
@@ -51,24 +66,10 @@ public class CommandeController {
     }
 
     @PostMapping("/{orderId}/product")
-    public ResponseEntity<String> addProduit(
-            @PathVariable long orderId,
-            @RequestParam long  produitId,
-            @RequestParam int quantite
-    ){
-        Produit produit = produitService.getProduitById(produitId);
-        Commande commande = commandeService.getCommandeById(orderId);
-        if (produit == null || commande == null || produit.getQuantite() < quantite){
-            return ResponseEntity
-                    .status(400)
-                    .body("Produit not available or invalid request");
-        }
-        boolean success = commandeService.addProductToCommande(produitId, orderId, quantite);
-        if (!success) {
-            return ResponseEntity
-                    .status(400)
-                    .body("Failed to add product to order");
-        }
+    public ResponseEntity<Void> addProduit(
+            @RequestBody Commande_line_DTO commande_line_dto
+            ){
+        commandeService.addProductToCommande(commande_line_dto.getProduitId(), commande_line_dto.getOrderId(), commande_line_dto.getQuantite());
         return ResponseEntity.ok().build();
     }
 

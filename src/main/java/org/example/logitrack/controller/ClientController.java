@@ -3,6 +3,7 @@ package org.example.logitrack.controller;
 
 import org.example.logitrack.model.Client;
 import org.example.logitrack.service.ClientService;
+import org.springframework.data.domain.Page;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,23 +23,31 @@ public class ClientController {
         return clientService.getAllClient();
     }
 
+    @GetMapping("/page")
+    public ResponseEntity<Page<Client>> getClientsPaginated(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "nom") String sortBy,
+            @RequestParam(defaultValue = "ASC") String sortDir,
+            @RequestParam(required = false) String nom
+    ){
+        return ResponseEntity.ok(clientService.searchClients(page, size, sortBy, sortDir, nom));
+    }
+
     @GetMapping("/{id}")
-    public Client getClientById(@RequestParam long id){
+    public Client getClientById(@PathVariable long id){
         return clientService.getClientById(id);
     }
 
     @PostMapping
     public ResponseEntity<Void> addClient(
-            @RequestParam String nom,
-            @RequestParam String email,
-            @RequestParam String telephone,
-            @RequestParam String ville
+           @RequestBody Client client_request
     ){
         Client cLient = new Client();
-        cLient.setNom(nom);
-        cLient.setEmail(email);
-        cLient.setTelephone(telephone);
-        cLient.setVille(ville);
+        cLient.setNom(client_request.getNom());
+        cLient.setEmail(client_request.getEmail());
+        cLient.setTelephone(client_request.getTelephone());
+        cLient.setVille(client_request.getVille());
         clientService.addClient(cLient);
         return ResponseEntity.ok().build();
     }

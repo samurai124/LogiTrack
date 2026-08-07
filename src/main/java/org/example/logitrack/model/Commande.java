@@ -26,6 +26,5 @@ public class Commande {
     private Client client;
 
     @OneToMany(mappedBy = "commande")
-    @JsonIgnore
     private List<LigneCommande> ligneCommandes;
 }

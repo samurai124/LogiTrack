@@ -1,11 +1,11 @@
 package org.example.logitrack.controller;
 
-
 import org.example.logitrack.model.Client;
 import org.example.logitrack.service.ClientService;
 import org.springframework.data.domain.Page;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,11 +19,13 @@ public class ClientController {
 
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'AGENT')")
     public List<Client> getAllClients(){
         return clientService.getAllClient();
     }
 
     @GetMapping("/page")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'AGENT')")
     public ResponseEntity<Page<Client>> getClientsPaginated(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -35,11 +37,13 @@ public class ClientController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'AGENT')")
     public Client getClientById(@PathVariable long id){
         return clientService.getClientById(id);
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<Void> addClient(
            @RequestBody Client client_request
     ){
@@ -52,14 +56,10 @@ public class ClientController {
         return ResponseEntity.ok().build();
     }
 
-
-
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteClient(@PathVariable Long id){
         clientService.deleteClient(id);
         return ResponseEntity.ok().build();
     }
-
-
-
 }

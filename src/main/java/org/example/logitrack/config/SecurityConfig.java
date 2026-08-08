@@ -46,16 +46,32 @@ public class SecurityConfig {
                         .accessDeniedHandler(customAccessDeniedHandler)
                 )
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers("/auth/**", "/api/auth/**").permitAll()
                         .requestMatchers("/", "/index.html", "/*.html", "/*.css", "/*.js", "/favicon.ico", "/static/**").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
 
-                        .requestMatchers("/api/users/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/**").hasRole("ADMIN")
 
-                        .requestMatchers("/api/stats/**").hasAnyRole("ADMIN", "MANAGER")
+                        .requestMatchers("/users/**", "/api/users/**").hasRole("ADMIN")
+
+                        .requestMatchers("/stats/**", "/api/stats/**").hasAnyRole("ADMIN", "MANAGER")
+                        .requestMatchers("/produit/stock-faible", "/api/produit/stock-faible").hasAnyRole("ADMIN", "MANAGER")
+
+                        .requestMatchers(HttpMethod.POST, "/client/**", "/api/client/**").hasAnyRole("ADMIN", "MANAGER")
+                        .requestMatchers(HttpMethod.PUT, "/client/**", "/api/client/**").hasAnyRole("ADMIN", "MANAGER")
+                        .requestMatchers(HttpMethod.PATCH, "/client/**", "/api/client/**").hasAnyRole("ADMIN", "MANAGER")
+
+                        .requestMatchers(HttpMethod.POST, "/produit/**", "/api/produit/**").hasAnyRole("ADMIN", "MANAGER")
+                        .requestMatchers(HttpMethod.PUT, "/produit/**", "/api/produit/**").hasAnyRole("ADMIN", "MANAGER")
+                        .requestMatchers(HttpMethod.PATCH, "/produit/**", "/api/produit/**").hasAnyRole("ADMIN", "MANAGER")
+
+                        .requestMatchers("/client/**", "/api/client/**").hasAnyRole("ADMIN", "MANAGER", "AGENT")
+                        .requestMatchers("/produit/**", "/api/produit/**").hasAnyRole("ADMIN", "MANAGER", "AGENT")
+                        .requestMatchers("/commande/**", "/api/commande/**").hasAnyRole("ADMIN", "MANAGER", "AGENT")
+
                         .anyRequest().authenticated()
                 )
+
                 .authenticationProvider(authenticationProvider)
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 

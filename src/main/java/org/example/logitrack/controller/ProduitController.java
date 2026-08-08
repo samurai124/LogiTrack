@@ -1,9 +1,11 @@
 package org.example.logitrack.controller;
+
 import org.example.logitrack.model.Produit;
 import org.example.logitrack.service.ProduitService;
 import org.springframework.data.domain.Page;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -16,11 +18,13 @@ public class ProduitController {
     private ProduitService produitService;
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'AGENT')")
     public List<Produit> getAllProduits(){
         return produitService.getAllProduits();
     }
 
     @GetMapping("/page")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'AGENT')")
     public ResponseEntity<Page<Produit>> getProduitsPaginated(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -37,6 +41,7 @@ public class ProduitController {
     }
 
     @GetMapping("/stock-faible")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<Page<Produit>> getStockFaiblePaginated(
             @RequestParam(defaultValue = "10") int seuil,
             @RequestParam(defaultValue = "0") int page,
@@ -48,11 +53,13 @@ public class ProduitController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'AGENT')")
     public Produit getProduitById(@PathVariable long id){
         return produitService.getProduitById(id);
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<Void> addProduit(
            @RequestBody Produit produit_request
     ){
@@ -67,12 +74,14 @@ public class ProduitController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteProduit(@PathVariable long id){
         produitService.deleteProduit(id);
         return ResponseEntity.ok().build();
     }
 
     @GetMapping("category/{category}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'AGENT')")
     public List<Produit> produitsParCategorie(
             @PathVariable String category
     ){
@@ -80,6 +89,7 @@ public class ProduitController {
     }
 
     @GetMapping("price/{price}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'AGENT')")
     public List<Produit> produitsByPrix(
             @PathVariable double prix
     ){

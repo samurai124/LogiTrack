@@ -11,6 +11,7 @@ import org.example.logitrack.service.ProduitService;
 import org.springframework.data.domain.Page;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -28,11 +29,13 @@ public class CommandeController {
     private ClientService clientService;
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'AGENT')")
     public List<Commande>  getCommandes(){
         return commandeService.getAllCommandes();
     }
 
     @GetMapping("/page")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'AGENT')")
     public ResponseEntity<Page<Commande>> getCommandesPaginated(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -46,11 +49,13 @@ public class CommandeController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'AGENT')")
     public Commande getCommandeById(@PathVariable long id){
         return commandeService.getCommandeById(id);
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'AGENT')")
     public ResponseEntity<Void> addCommande(
             @RequestParam long id_client
     ){
@@ -66,6 +71,7 @@ public class CommandeController {
     }
 
     @PostMapping("/{orderId}/product")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'AGENT')")
     public ResponseEntity<Void> addProduit(
             @RequestBody Commande_line_DTO commande_line_dto
             ){
@@ -75,6 +81,7 @@ public class CommandeController {
 
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'AGENT')")
     public ResponseEntity<Void> updateCommandeStatus(
             @PathVariable long id,
             @RequestParam String status
@@ -85,6 +92,7 @@ public class CommandeController {
 
 
     @GetMapping("client/{clientId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'AGENT')")
     public List<Commande> getClientCommandes(
             @PathVariable long clientId
     ){

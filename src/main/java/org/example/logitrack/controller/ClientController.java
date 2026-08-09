@@ -29,11 +29,11 @@ public class ClientController {
     public ResponseEntity<Page<Client>> getClientsPaginated(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "nom") String sortBy,
-            @RequestParam(defaultValue = "ASC") String sortDir,
-            @RequestParam(required = false) String nom
+            @RequestParam(defaultValue = "asc") String sortDir,
+            @RequestParam(defaultValue = "id") String sortBy
     ){
-        return ResponseEntity.ok(clientService.searchClients(page, size, sortBy, sortDir, nom));
+        Page<Client> clientPage = clientService.SortParNom(page, size, sortDir);
+        return ResponseEntity.ok(clientPage);
     }
 
     @GetMapping("/{id}")
@@ -61,5 +61,10 @@ public class ClientController {
     public ResponseEntity<Void> deleteClient(@PathVariable Long id){
         clientService.deleteClient(id);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/nom")
+    public List<Client> findByNOm(@RequestParam String nom){
+        return clientService.findByNom(nom);
     }
 }
